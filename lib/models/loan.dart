@@ -1,3 +1,7 @@
+// Loan — the customer's active loan. Same fromJson/toJson contract as User:
+// JSON in → typed model out. The enum is serialized via its `name` so
+// "active" / "paid" / "defaulted" / "pending" match exactly what a Django
+// serializer would emit.
 enum LoanStatus { active, paid, defaulted, pending }
 
 extension LoanStatusLabel on LoanStatus {

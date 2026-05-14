@@ -1,3 +1,5 @@
+// Payment — one scheduled or completed payment against a loan.
+// `paidDate` is nullable because upcoming and late payments haven't been paid.
 enum PaymentStatus { paid, upcoming, late }
 
 extension PaymentStatusLabel on PaymentStatus {

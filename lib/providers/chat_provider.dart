@@ -2,6 +2,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/chat_message.dart';
 import '../services/mock_api_service.dart';
 
+// chatProvider — holds the conversation. We use a `StateNotifier<ChatState>`
+// instead of a `FutureProvider` because messages are *appended* over time
+// rather than fetched once; the loading state coexists with prior messages
+// so the UI can show a typing indicator beneath them.
+//
+// TODO(llm-agent): replace MockApiService.sendChatMessage with a streaming
+//   call to a real LLM. The provider already exposes `isLoading`, so a
+//   streaming token-by-token implementation just needs to append-as-it-goes.
+
 class ChatState {
   final List<ChatMessage> messages;
   final bool isLoading;

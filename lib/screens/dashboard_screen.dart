@@ -4,9 +4,11 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../models/loan.dart';
 import '../models/payment.dart';
-import '../providers/user_provider.dart';
+import '../models/user.dart';
+import '../providers/auth_provider.dart';
 import '../providers/loan_provider.dart';
 import '../providers/payments_provider.dart';
+import '../providers/chat_provider.dart';
 import '../router/app_router.dart';
 import '../utils/app_theme.dart';
 import '../widgets/fintech_card.dart';
@@ -20,30 +22,24 @@ class DashboardScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final userAsync = ref.watch(userProvider);
+    final user = ref.watch(authProvider).user;
     final loanAsync = ref.watch(loanProvider);
     final paymentsAsync = ref.watch(paymentsProvider);
 
-    final greeting = userAsync.maybeWhen(
-      data: (u) => 'Hi, ${u.firstName}',
-      orElse: () => 'Dashboard',
-    );
+    // Router guarantees user is non-null when on this screen, but we still
+    // fall back defensively if a logout race lands here mid-frame.
+    final greeting = user != null ? 'Hi, ${user.firstName}' : 'Dashboard';
 
     return Scaffold(
       appBar: AppBar(
         title: Text(greeting),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_none_rounded),
-            tooltip: 'Notifications',
-            onPressed: () {},
-          ),
+          _ProfileMenu(user: user),
           const SizedBox(width: AppSpacing.xs),
         ],
       ),
       body: RefreshIndicator(
         onRefresh: () async {
-          ref.invalidate(userProvider);
           ref.invalidate(loanProvider);
           ref.invalidate(paymentsProvider);
           try {
@@ -179,25 +175,33 @@ class _LoanHeroCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Loan Balance',
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.8),
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
+              Expanded(
+                child: Text(
+                  'Loan Balance',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.8),
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
+              const SizedBox(width: AppSpacing.sm),
               StatusBadge.forLoan(loan.status, onDark: true),
             ],
           ),
           const SizedBox(height: AppSpacing.sm),
-          Text(
-            _currency.format(loan.remainingBalance),
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 34,
-              fontWeight: FontWeight.w800,
-              letterSpacing: -0.5,
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              _currency.format(loan.remainingBalance),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 34,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.5,
+              ),
             ),
           ),
           const SizedBox(height: 4),
@@ -207,18 +211,24 @@ class _LoanHeroCard extends StatelessWidget {
               color: Colors.white.withValues(alpha: 0.65),
               fontSize: 13,
             ),
+            overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: AppSpacing.lg),
 
-          // Progress bar
+          // Progress bar — animates from 0 to target on mount.
           ClipRRect(
             borderRadius: BorderRadius.circular(6),
-            child: LinearProgressIndicator(
-              value: loan.progressFraction,
-              backgroundColor: Colors.white.withValues(alpha: 0.2),
-              valueColor:
-                  const AlwaysStoppedAnimation<Color>(Colors.white),
-              minHeight: 7,
+            child: TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0, end: loan.progressFraction),
+              duration: const Duration(milliseconds: 900),
+              curve: Curves.easeOutCubic,
+              builder: (context, value, child) => LinearProgressIndicator(
+                value: value,
+                backgroundColor: Colors.white.withValues(alpha: 0.2),
+                valueColor:
+                    const AlwaysStoppedAnimation<Color>(Colors.white),
+                minHeight: 7,
+              ),
             ),
           ),
           const SizedBox(height: AppSpacing.sm),
@@ -302,24 +312,7 @@ class _NextPaymentCard extends StatelessWidget {
               ],
             ),
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(
-                color: AppColors.primary.withValues(alpha: 0.2),
-              ),
-            ),
-            child: const Text(
-              'Pay now',
-              style: TextStyle(
-                color: AppColors.primary,
-                fontWeight: FontWeight.w600,
-                fontSize: 13,
-              ),
-            ),
-          ),
+          _PayNowChip(),
         ],
       ),
     );
@@ -385,6 +378,129 @@ class _AssistantBanner extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// "Pay now" chip — tappable demo placeholder. Real flow would open a sheet.
+// ---------------------------------------------------------------------------
+
+class _PayNowChip extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppColors.primary.withValues(alpha: 0.08),
+      borderRadius: BorderRadius.circular(10),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(10),
+        onTap: () {
+          ScaffoldMessenger.of(context)
+            ..hideCurrentSnackBar()
+            ..showSnackBar(
+              const SnackBar(
+                content: Text('Demo: payment flow is not wired up.'),
+                duration: Duration(seconds: 2),
+              ),
+            );
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: AppColors.primary.withValues(alpha: 0.2),
+            ),
+          ),
+          child: const Text(
+            'Pay now',
+            style: TextStyle(
+              color: AppColors.primary,
+              fontWeight: FontWeight.w600,
+              fontSize: 13,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Profile / logout menu in the AppBar
+// ---------------------------------------------------------------------------
+
+class _ProfileMenu extends ConsumerWidget {
+  final User? user;
+
+  const _ProfileMenu({required this.user});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final initial = (user?.firstName.isNotEmpty ?? false)
+        ? user!.firstName.substring(0, 1).toUpperCase()
+        : '?';
+
+    return PopupMenuButton<String>(
+      offset: const Offset(0, 48),
+      tooltip: 'Account',
+      icon: CircleAvatar(
+        radius: 16,
+        backgroundColor: AppColors.primary.withValues(alpha: 0.12),
+        child: Text(
+          initial,
+          style: const TextStyle(
+            color: AppColors.primary,
+            fontWeight: FontWeight.w700,
+            fontSize: 13,
+          ),
+        ),
+      ),
+      itemBuilder: (_) => [
+        PopupMenuItem<String>(
+          enabled: false,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                user?.name ?? 'Unknown',
+                style: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                user?.email ?? '',
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const PopupMenuDivider(),
+        const PopupMenuItem<String>(
+          value: 'logout',
+          child: Row(
+            children: [
+              Icon(Icons.logout_rounded,
+                  size: 18, color: AppColors.error),
+              SizedBox(width: AppSpacing.sm),
+              Text('Logout', style: TextStyle(color: AppColors.error)),
+            ],
+          ),
+        ),
+      ],
+      onSelected: (value) {
+        if (value == 'logout') {
+          // Clear chat history before logout so the next session starts clean.
+          ref.invalidate(chatProvider);
+          ref.read(authProvider.notifier).logout();
+        }
+      },
     );
   }
 }

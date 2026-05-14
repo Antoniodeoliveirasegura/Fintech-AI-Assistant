@@ -3,6 +3,9 @@ import 'package:intl/intl.dart';
 import '../models/chat_message.dart';
 import '../utils/app_theme.dart';
 
+// Each bubble plays a brief entrance animation on first build.
+// AnimatedSize/Opacity would also work — we use TweenAnimationBuilder for a
+// one-shot tween that doesn't need a State class.
 class ChatBubble extends StatelessWidget {
   final ChatMessage message;
 
@@ -13,7 +16,24 @@ class ChatBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isUser = message.isUser;
+    final bubble = _buildBubble(context, isUser);
 
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: 1),
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOut,
+      builder: (_, t, child) => Opacity(
+        opacity: t,
+        child: Transform.translate(
+          offset: Offset(0, (1 - t) * 8),
+          child: child,
+        ),
+      ),
+      child: bubble,
+    );
+  }
+
+  Widget _buildBubble(BuildContext context, bool isUser) {
     return Align(
       alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(

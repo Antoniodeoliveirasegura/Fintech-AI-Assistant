@@ -25,6 +25,17 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> {
   final _focusNode = FocusNode();
 
   @override
+  void initState() {
+    super.initState();
+    // Auto-focus the input on first frame so the keyboard pops up immediately.
+    // Wrapped in addPostFrameCallback to avoid focusing before the screen is
+    // attached to the tree (which would no-op).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _focusNode.requestFocus();
+    });
+  }
+
+  @override
   void dispose() {
     _inputCtrl.dispose();
     _scrollCtrl.dispose();
@@ -44,8 +55,8 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> {
       if (_scrollCtrl.hasClients) {
         _scrollCtrl.animateTo(
           _scrollCtrl.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 280),
-          curve: Curves.easeOut,
+          duration: const Duration(milliseconds: 340),
+          curve: Curves.easeOutCubic,
         );
       }
     });

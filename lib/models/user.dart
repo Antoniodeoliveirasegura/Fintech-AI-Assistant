@@ -1,3 +1,9 @@
+// User — the signed-in customer.
+//
+// fromJson / toJson exist so this model can round-trip over HTTP. When the
+// mock API is replaced by a real Django backend, `User.fromJson(response)`
+// will deserialize the JSON body that /api/v1/users/me returns — no other
+// code needs to change.
 class User {
   final String id;
   final String name;
