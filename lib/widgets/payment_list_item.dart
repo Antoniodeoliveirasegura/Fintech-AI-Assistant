@@ -33,15 +33,18 @@ class PaymentListItem extends StatelessWidget {
                   Text(
                     _currency.format(payment.amount),
                     style: Theme.of(context).textTheme.titleMedium,
+                    overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 2),
                   Text(
                     'Due ${_date.format(payment.dueDate)}',
                     style: Theme.of(context).textTheme.bodyMedium,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),
             ),
+            const SizedBox(width: AppSpacing.sm),
             StatusBadge.forPayment(payment.status),
           ],
         ),

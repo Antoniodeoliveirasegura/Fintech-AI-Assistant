@@ -19,14 +19,20 @@ extension PaymentFilterLabel on PaymentFilter {
   }
 }
 
+// paymentsProvider — async fetch of all payments for the active loan.
+// TODO(django-backend): wire to GET /api/v1/loans/{id}/payments.
 final paymentsProvider = FutureProvider<List<Payment>>((ref) {
   return MockApiService().getPayments();
 });
 
+// paymentFilterProvider — pure UI state for the chip row (no async work).
+// `StateProvider` is the lightweight choice for "one value, mutated freely".
 final paymentFilterProvider =
     StateProvider<PaymentFilter>((ref) => PaymentFilter.all);
 
-// Derives the filtered list from the raw payments + active filter.
+// filteredPaymentsProvider — derives the visible list from raw payments +
+// the active filter. This pattern (a `Provider` that watches other providers)
+// is how Riverpod handles "computed" state without re-fetching from the API.
 final filteredPaymentsProvider = Provider<AsyncValue<List<Payment>>>((ref) {
   final paymentsAsync = ref.watch(paymentsProvider);
   final filter = ref.watch(paymentFilterProvider);

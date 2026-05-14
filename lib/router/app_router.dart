@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../providers/auth_provider.dart';
 import '../screens/login_screen.dart';
 import '../screens/shell_screen.dart';
 import '../screens/dashboard_screen.dart';
@@ -15,15 +17,31 @@ class AppRoutes {
 }
 
 final appRouterProvider = Provider<GoRouter>((ref) {
+  // Bridge: Riverpod auth state -> Listenable for GoRouter.
+  // Bumping `.value` triggers notifyListeners(), which makes GoRouter re-run
+  // its redirect callback. We dispose it with the provider's lifecycle.
+  final authRefresh = ValueNotifier<int>(0);
+  ref.onDispose(authRefresh.dispose);
+  ref.listen<AuthState>(authProvider, (prev, next) => authRefresh.value++);
+
   return GoRouter(
     initialLocation: AppRoutes.login,
     debugLogDiagnostics: true,
+    refreshListenable: authRefresh,
+    redirect: (context, state) {
+      final isAuth = ref.read(authProvider).isAuthenticated;
+      final isOnLogin = state.matchedLocation == AppRoutes.login;
+
+      if (!isAuth) return isOnLogin ? null : AppRoutes.login;
+      if (isOnLogin) return AppRoutes.dashboard;
+      return null;
+    },
     routes: [
       GoRoute(
         path: AppRoutes.login,
         builder: (context, state) => const LoginScreen(),
       ),
-      // ShellRoute wraps dashboard/payments/assistant in the bottom nav shell.
+      // ShellRoute wraps the authenticated tabs in the bottom-nav shell.
       ShellRoute(
         builder: (context, state, child) => ShellScreen(child: child),
         routes: [

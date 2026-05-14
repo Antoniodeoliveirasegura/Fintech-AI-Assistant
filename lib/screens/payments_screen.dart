@@ -96,35 +96,38 @@ class _FilterBar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return SizedBox(
-      height: 56,
-      child: ListView(
+      height: 60,
+      child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-        children: PaymentFilter.values.map((filter) {
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.sm + 2,
+        ),
+        itemCount: PaymentFilter.values.length,
+        separatorBuilder: (context, index) =>
+            const SizedBox(width: AppSpacing.sm),
+        itemBuilder: (context, i) {
+          final filter = PaymentFilter.values[i];
           final isSelected = filter == selected;
-          return Padding(
-            padding: const EdgeInsets.only(right: AppSpacing.sm, top: 10, bottom: 10),
-            child: FilterChip(
-              label: Text(filter.label),
-              selected: isSelected,
-              onSelected: (_) =>
-                  ref.read(paymentFilterProvider.notifier).state = filter,
-              selectedColor: AppColors.primary.withValues(alpha: 0.12),
-              checkmarkColor: AppColors.primary,
-              labelStyle: TextStyle(
-                color: isSelected ? AppColors.primary : AppColors.textSecondary,
-                fontWeight:
-                    isSelected ? FontWeight.w600 : FontWeight.w400,
-              ),
-              side: BorderSide(
-                color: isSelected
-                    ? AppColors.primary.withValues(alpha: 0.4)
-                    : const Color(0xFFE2E8F0),
-              ),
-              showCheckmark: false,
+          return FilterChip(
+            label: Text(filter.label),
+            selected: isSelected,
+            onSelected: (_) =>
+                ref.read(paymentFilterProvider.notifier).state = filter,
+            selectedColor: AppColors.primary.withValues(alpha: 0.12),
+            checkmarkColor: AppColors.primary,
+            labelStyle: TextStyle(
+              color: isSelected ? AppColors.primary : AppColors.textSecondary,
+              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
             ),
+            side: BorderSide(
+              color: isSelected
+                  ? AppColors.primary.withValues(alpha: 0.4)
+                  : const Color(0xFFE2E8F0),
+            ),
+            showCheckmark: false,
           );
-        }).toList(),
+        },
       ),
     );
   }

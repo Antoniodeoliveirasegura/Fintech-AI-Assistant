@@ -1,58 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-import '../services/mock_api_service.dart';
-import '../router/app_router.dart';
+import '../providers/auth_provider.dart';
 import '../utils/app_theme.dart';
 
-// ---------------------------------------------------------------------------
-// Screen-scoped provider — auto-disposed when the screen leaves the tree.
-// ---------------------------------------------------------------------------
-
-class _LoginState {
-  final bool isLoading;
-  final String? error;
-
-  const _LoginState({this.isLoading = false, this.error});
-
-  _LoginState copyWith({bool? isLoading, String? error}) => _LoginState(
-        isLoading: isLoading ?? this.isLoading,
-        error: error,
-      );
-
-  _LoginState clearError() => _LoginState(isLoading: isLoading);
-}
-
-class _LoginNotifier extends StateNotifier<_LoginState> {
-  _LoginNotifier() : super(const _LoginState());
-
-  Future<void> login(
-    String email,
-    String password,
-    VoidCallback onSuccess,
-  ) async {
-    if (state.isLoading) return;
-    state = state.copyWith(isLoading: true).clearError();
-
-    try {
-      await MockApiService().login(email, password);
-      onSuccess();
-    } on Exception catch (e) {
-      state = _LoginState(
-        error: e.toString().replaceFirst('Exception: ', ''),
-      );
-    }
-  }
-}
-
-final _loginProvider =
-    StateNotifierProvider.autoDispose<_LoginNotifier, _LoginState>(
-  (ref) => _LoginNotifier(),
-);
-
-// ---------------------------------------------------------------------------
-// Screen
-// ---------------------------------------------------------------------------
+// Login screen — drives the global authProvider. Successful login flips
+// `authProvider.isAuthenticated` to true, and the router's redirect callback
+// then moves the user to /dashboard automatically. No explicit navigation
+// happens here.
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -76,16 +30,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
-    ref.read(_loginProvider.notifier).login(
+    ref.read(authProvider.notifier).login(
           _emailCtrl.text.trim(),
           _passwordCtrl.text,
-          () => context.go(AppRoutes.dashboard),
         );
   }
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(_loginProvider);
+    final auth = ref.watch(authProvider);
 
     return Scaffold(
       backgroundColor: AppColors.surfaceLight,
@@ -103,7 +56,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Brand mark
                     Container(
                       width: 56,
                       height: 56,
@@ -130,7 +82,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                     const SizedBox(height: AppSpacing.xl),
 
-                    // Email
                     TextFormField(
                       controller: _emailCtrl,
                       keyboardType: TextInputType.emailAddress,
@@ -152,7 +103,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                     const SizedBox(height: AppSpacing.md),
 
-                    // Password
                     TextFormField(
                       controller: _passwordCtrl,
                       obscureText: _obscure,
@@ -183,27 +133,32 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                     const SizedBox(height: AppSpacing.lg),
 
-                    // Error banner
-                    if (state.error != null) ...[
-                      _ErrorBanner(message: state.error!),
+                    if (auth.error != null) ...[
+                      _ErrorBanner(message: auth.error!),
                       const SizedBox(height: AppSpacing.md),
                     ],
 
-                    // Sign in button
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
-                        onPressed: state.isLoading ? null : _submit,
-                        child: state.isLoading
-                            ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2.5,
-                                  color: Colors.white,
+                        onPressed: auth.isLoading ? null : _submit,
+                        child: AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 180),
+                          child: auth.isLoading
+                              ? const SizedBox(
+                                  key: ValueKey('spinner'),
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2.5,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : const Text(
+                                  'Sign in',
+                                  key: ValueKey('label'),
                                 ),
-                              )
-                            : const Text('Sign in'),
+                        ),
                       ),
                     ),
 
@@ -211,10 +166,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     Center(
                       child: Text(
                         'Demo: any email · password 6+ chars',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              fontSize: 12,
-                              color: AppColors.textSecondary,
-                            ),
+                        style:
+                            Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                  fontSize: 12,
+                                  color: AppColors.textSecondary,
+                                ),
                       ),
                     ),
                   ],

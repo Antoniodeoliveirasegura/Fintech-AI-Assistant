@@ -1,3 +1,6 @@
+// ChatMessage — a single bubble in the AI assistant conversation.
+// Designed to mirror an OpenAI/Anthropic message shape (role + content)
+// so the future real-LLM integration is structurally identical.
 enum MessageRole { user, assistant }
 
 class ChatMessage {
