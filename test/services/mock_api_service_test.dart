@@ -46,13 +46,15 @@ void main() {
       }
     });
 
-    test('watchAccountNotifications emits live notification snapshots',
-        () async {
-      final firstSnapshot = await api.watchAccountNotifications().first;
+    test(
+      'watchAccountNotifications emits live notification snapshots',
+      () async {
+        final firstSnapshot = await api.watchAccountNotifications().first;
 
-      expect(firstSnapshot, hasLength(2));
-      expect(firstSnapshot.first.title, isNotEmpty);
-    });
+        expect(firstSnapshot, hasLength(2));
+        expect(firstSnapshot.first.title, isNotEmpty);
+      },
+    );
 
     test('login throws when credentials are empty', () async {
       expect(api.login('', ''), throwsException);

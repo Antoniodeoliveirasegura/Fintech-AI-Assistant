@@ -33,25 +33,25 @@ class Payment {
   });
 
   factory Payment.fromJson(Map<String, dynamic> json) => Payment(
-        id: json['id'] as String,
-        loanId: json['loan_id'] as String,
-        amount: (json['amount'] as num).toDouble(),
-        dueDate: DateTime.parse(json['due_date'] as String),
-        paidDate: json['paid_date'] != null
-            ? DateTime.parse(json['paid_date'] as String)
-            : null,
-        status: PaymentStatus.values.firstWhere(
-          (e) => e.name == json['status'],
-          orElse: () => PaymentStatus.upcoming,
-        ),
-      );
+    id: json['id'] as String,
+    loanId: json['loan_id'] as String,
+    amount: (json['amount'] as num).toDouble(),
+    dueDate: DateTime.parse(json['due_date'] as String),
+    paidDate: json['paid_date'] != null
+        ? DateTime.parse(json['paid_date'] as String)
+        : null,
+    status: PaymentStatus.values.firstWhere(
+      (e) => e.name == json['status'],
+      orElse: () => PaymentStatus.upcoming,
+    ),
+  );
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'loan_id': loanId,
-        'amount': amount,
-        'due_date': dueDate.toIso8601String(),
-        'paid_date': paidDate?.toIso8601String(),
-        'status': status.name,
-      };
+    'id': id,
+    'loan_id': loanId,
+    'amount': amount,
+    'due_date': dueDate.toIso8601String(),
+    'paid_date': paidDate?.toIso8601String(),
+    'status': status.name,
+  };
 }

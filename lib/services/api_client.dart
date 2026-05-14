@@ -1,22 +1,8 @@
-// ApiClient — abstraction over HTTP transport.
-//
-// PURPOSE
-// This file exists to make the eventual migration from MockApiService to a
-// real Django REST backend a localized change. Today no production code uses
-// `HttpApiClient`; MockApiService returns hardcoded data via Future.delayed.
-//
-// MIGRATION PATH
-// 1. Implement the methods below (uncomment the http package usage).
-// 2. Inject `ApiClient` into a new `RemoteApiService` that mirrors the
-//    MockApiService surface (getCurrentUser, getLoan, getPayments, login,
-//    sendChatMessage).
-// 3. Swap the singleton in lib/services/mock_api_service.dart — or expose
-//    an `apiServiceProvider` (Riverpod) that returns the chosen impl based
-//    on a build flag (`const bool.fromEnvironment('USE_MOCK_API')`).
-// 4. Move `baseUrl` and any tokens to a config layer (dart-define or
-//    flutter_dotenv). Never hardcode them at the call site.
+import 'dart:convert';
 
 import 'package:http/http.dart' as http;
+import '../utils/app_config.dart';
+import '../utils/app_logger.dart';
 
 abstract class ApiClient {
   String get baseUrl;
@@ -34,30 +20,33 @@ abstract class ApiClient {
   });
 }
 
+class ApiException implements Exception {
+  final int? statusCode;
+  final String message;
+
+  const ApiException(this.message, {this.statusCode});
+
+  @override
+  String toString() =>
+      statusCode == null ? message : 'HTTP $statusCode: $message';
+}
+
 class HttpApiClient implements ApiClient {
-  HttpApiClient({
-    required this.baseUrl,
-    this.authToken,
-    http.Client? client,
-  }) : _client = client ?? http.Client();
+  HttpApiClient({String? baseUrl, this.authToken, http.Client? client})
+    : baseUrl = baseUrl ?? AppConfig.apiBaseUrl,
+      _client = client ?? http.Client();
 
   @override
   final String baseUrl;
 
-  // ── Auth ──────────────────────────────────────────────────────────────
-  // The token is held in memory only. In production this would come from
-  // secure storage (flutter_secure_storage) and be refreshed on 401 via
-  // a refresh-token endpoint.
   String? authToken;
-
   final http.Client _client;
 
   Map<String, String> _defaultHeaders() => {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        if (authToken != null) 'Authorization': 'Bearer $authToken',
-        // Real apps add: X-Request-Id (tracing), X-Client-Version, locale, etc.
-      };
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+    if (authToken != null) 'Authorization': 'Bearer $authToken',
+  };
 
   @override
   Future<Map<String, dynamic>> get(
@@ -65,21 +54,15 @@ class HttpApiClient implements ApiClient {
     Map<String, String>? queryParams,
     Map<String, String>? headers,
   }) async {
-    // Real implementation (left as TODO for the Django integration phase):
-    //
-    //   final uri = Uri.parse('$baseUrl$path').replace(queryParameters: queryParams);
-    //   final mergedHeaders = {..._defaultHeaders(), ...?headers};
-    //   final res = await _client.get(uri, headers: mergedHeaders).timeout(const Duration(seconds: 15));
-    //   return _decode(res);
-    //
-    // Cross-cutting concerns to add here:
-    // - Retry on 5xx with exponential backoff
-    // - Centralized 401 handling -> trigger logout via AuthProvider
-    // - Structured logging / Sentry breadcrumbs
-    final _ = _defaultHeaders(); // ensures the helper stays referenced
-    throw UnimplementedError(
-      'HttpApiClient.get not yet wired — using MockApiService. path=$path',
-    );
+    final uri = Uri.parse(
+      '$baseUrl$path',
+    ).replace(queryParameters: queryParams);
+    final response = await _client
+        .get(uri, headers: {..._defaultHeaders(), ...?headers})
+        .timeout(const Duration(seconds: 15));
+
+    AppLogger.debug('GET $path -> ${response.statusCode}', scope: 'api');
+    return _decode(response);
   }
 
   @override
@@ -88,17 +71,33 @@ class HttpApiClient implements ApiClient {
     Map<String, String>? headers,
     Object? body,
   }) async {
-    // TODO: implement — see notes on get().
-    final _ = _defaultHeaders();
-    throw UnimplementedError(
-      'HttpApiClient.post not yet wired — using MockApiService. path=$path',
-    );
+    final uri = Uri.parse('$baseUrl$path');
+    final response = await _client
+        .post(
+          uri,
+          headers: {..._defaultHeaders(), ...?headers},
+          body: body == null ? null : jsonEncode(body),
+        )
+        .timeout(const Duration(seconds: 15));
+
+    AppLogger.debug('POST $path -> ${response.statusCode}', scope: 'api');
+    return _decode(response);
   }
 
-  // Reserved for the real implementation: decode body, surface API errors
-  // as typed exceptions (NetworkException, AuthException, ValidationException).
-  //
-  // Map<String, dynamic> _decode(http.Response res) { ... }
+  Map<String, dynamic> _decode(http.Response response) {
+    final statusCode = response.statusCode;
+    final decoded = response.body.isEmpty
+        ? <String, dynamic>{}
+        : jsonDecode(response.body) as Map<String, dynamic>;
+
+    if (statusCode >= 200 && statusCode < 300) return decoded;
+
+    final message =
+        decoded['message'] as String? ??
+        decoded['detail'] as String? ??
+        'Request failed';
+    throw ApiException(message, statusCode: statusCode);
+  }
 
   void dispose() => _client.close();
 }

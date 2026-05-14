@@ -26,12 +26,12 @@ class AccountNotification {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'title': title,
-        'message': message,
-        'created_at': createdAt.toIso8601String(),
-        'type': type.name,
-      };
+    'id': id,
+    'title': title,
+    'message': message,
+    'created_at': createdAt.toIso8601String(),
+    'type': type.name,
+  };
 }
 
 enum AccountNotificationType { payment, reminder, insight }

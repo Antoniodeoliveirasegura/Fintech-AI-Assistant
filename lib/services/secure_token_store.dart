@@ -7,9 +7,8 @@ abstract class SecureTokenStore {
 }
 
 class FlutterSecureTokenStore implements SecureTokenStore {
-  FlutterSecureTokenStore({
-    FlutterSecureStorage? storage,
-  }) : _storage = storage ?? const FlutterSecureStorage();
+  FlutterSecureTokenStore({FlutterSecureStorage? storage})
+    : _storage = storage ?? const FlutterSecureStorage();
 
   static const _tokenKey = 'mock_auth_token';
   final FlutterSecureStorage _storage;

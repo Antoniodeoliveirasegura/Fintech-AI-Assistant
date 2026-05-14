@@ -54,8 +54,11 @@ void main() {
     test('"what should I do next" returns actionable advice', () async {
       final reply = await ask('What should I do next?');
       expect(reply, isNotEmpty);
-      expect(reply.length, greaterThan(40),
-          reason: 'advice replies should be substantive');
+      expect(
+        reply.length,
+        greaterThan(40),
+        reason: 'advice replies should be substantive',
+      );
     });
 
     test('summary question lists key fields', () async {

@@ -7,10 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  Future<void> pumpApp(
-    WidgetTester tester, {
-    String? initialToken,
-  }) async {
+  Future<void> pumpApp(WidgetTester tester, {String? initialToken}) async {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
@@ -36,8 +33,9 @@ void main() {
     expect(find.text('Sign in'), findsOneWidget);
   });
 
-  testWidgets('stored token restores session and shows dashboard',
-      (tester) async {
+  testWidgets('stored token restores session and shows dashboard', (
+    tester,
+  ) async {
     await pumpApp(tester, initialToken: 'mock-session-token');
 
     await tester.pump();

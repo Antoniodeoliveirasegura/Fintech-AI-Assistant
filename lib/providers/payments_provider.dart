@@ -27,8 +27,9 @@ final paymentsProvider = FutureProvider<List<Payment>>((ref) {
 
 // paymentFilterProvider — pure UI state for the chip row (no async work).
 // `StateProvider` is the lightweight choice for "one value, mutated freely".
-final paymentFilterProvider =
-    StateProvider<PaymentFilter>((ref) => PaymentFilter.all);
+final paymentFilterProvider = StateProvider<PaymentFilter>(
+  (ref) => PaymentFilter.all,
+);
 
 // filteredPaymentsProvider — derives the visible list from raw payments +
 // the active filter. This pattern (a `Provider` that watches other providers)

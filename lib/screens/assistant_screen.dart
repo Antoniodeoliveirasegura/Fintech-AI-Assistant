@@ -10,6 +10,7 @@ const _suggestions = [
   'Do I have late payments?',
   'Summarize my loan.',
   'Show my recent payments.',
+  'What should I do next?',
 ];
 
 class AssistantScreen extends ConsumerStatefulWidget {
@@ -27,9 +28,6 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> {
   @override
   void initState() {
     super.initState();
-    // Auto-focus the input on first frame so the keyboard pops up immediately.
-    // Wrapped in addPostFrameCallback to avoid focusing before the screen is
-    // attached to the tree (which would no-op).
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _focusNode.requestFocus();
     });
@@ -64,7 +62,6 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Scroll to bottom whenever the message list grows or typing starts.
     ref.listen(chatMessagesProvider, (prev, next) => _scrollToBottom());
     ref.listen(chatLoadingProvider, (prev, next) {
       if (next) _scrollToBottom();
@@ -72,8 +69,6 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> {
 
     final messages = ref.watch(chatMessagesProvider);
     final isLoading = ref.watch(chatLoadingProvider);
-
-    // Only show suggestions while only the welcome message is present.
     final showSuggestions = messages.length == 1;
 
     return Scaffold(
@@ -83,17 +78,13 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> {
           IconButton(
             icon: const Icon(Icons.refresh_rounded),
             tooltip: 'Clear chat',
-            onPressed: () {
-              // Re-create the notifier to reset the chat.
-              ref.invalidate(chatProvider);
-            },
+            onPressed: () => ref.invalidate(chatProvider),
           ),
           const SizedBox(width: AppSpacing.xs),
         ],
       ),
       body: Column(
         children: [
-          // ── Message list ──────────────────────────────────────────────
           Expanded(
             child: GestureDetector(
               onTap: () => _focusNode.unfocus(),
@@ -106,17 +97,16 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> {
                   AppSpacing.sm,
                 ),
                 itemCount:
-                    messages.length + (isLoading ? 1 : 0) + (showSuggestions ? 1 : 0),
+                    messages.length +
+                    (isLoading ? 1 : 0) +
+                    (showSuggestions ? 1 : 0),
                 itemBuilder: (context, i) {
-                  // Suggestion chips slot (appears below welcome bubble)
                   if (showSuggestions && i == 1) {
                     return _SuggestionChips(onTap: _send);
                   }
 
-                  // Shift index to account for the suggestion slot.
                   final msgIndex = showSuggestions && i > 1 ? i - 1 : i;
 
-                  // Typing indicator slot
                   if (isLoading && msgIndex == messages.length) {
                     return const TypingIndicator();
                   }
@@ -126,8 +116,6 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> {
               ),
             ),
           ),
-
-          // ── Input bar ─────────────────────────────────────────────────
           _InputBar(
             controller: _inputCtrl,
             focusNode: _focusNode,
@@ -139,10 +127,6 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> {
     );
   }
 }
-
-// ---------------------------------------------------------------------------
-// AppBar title with status dot
-// ---------------------------------------------------------------------------
 
 class _AssistantTitle extends StatelessWidget {
   const _AssistantTitle();
@@ -168,10 +152,6 @@ class _AssistantTitle extends StatelessWidget {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Suggestion prompt chips
-// ---------------------------------------------------------------------------
-
 class _SuggestionChips extends StatelessWidget {
   final void Function(String) onTap;
 
@@ -179,6 +159,9 @@ class _SuggestionChips extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.md),
       child: Column(
@@ -186,41 +169,46 @@ class _SuggestionChips extends StatelessWidget {
         children: [
           Text(
             'Try asking:',
-            style: Theme.of(context)
-                .textTheme
-                .bodyMedium
-                ?.copyWith(fontWeight: FontWeight.w600),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
           ),
           const SizedBox(height: AppSpacing.sm),
           Wrap(
             spacing: AppSpacing.sm,
             runSpacing: AppSpacing.sm,
             children: _suggestions.map((s) {
-              return GestureDetector(
-                onTap: () => onTap(s),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.04),
-                        blurRadius: 4,
-                        offset: const Offset(0, 1),
+              return Material(
+                color: theme.cardColor,
+                borderRadius: BorderRadius.circular(20),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(20),
+                  onTap: () => onTap(s),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: theme.dividerColor),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(
+                            alpha: isDark ? 0.16 : 0.04,
+                          ),
+                          blurRadius: 4,
+                          offset: const Offset(0, 1),
+                        ),
+                      ],
+                    ),
+                    child: Text(
+                      s,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w500,
                       ),
-                    ],
-                  ),
-                  child: Text(
-                    s,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ),
@@ -232,10 +220,6 @@ class _SuggestionChips extends StatelessWidget {
     );
   }
 }
-
-// ---------------------------------------------------------------------------
-// Input bar — text field + send button
-// ---------------------------------------------------------------------------
 
 class _InputBar extends StatelessWidget {
   final TextEditingController controller;
@@ -252,6 +236,7 @@ class _InputBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
     return Container(
@@ -262,13 +247,13 @@ class _InputBar extends StatelessWidget {
         AppSpacing.md + bottomInset,
       ),
       decoration: BoxDecoration(
-        color: Colors.white,
-        border: const Border(
-          top: BorderSide(color: Color(0xFFE2E8F0)),
-        ),
+        color: theme.cardColor,
+        border: Border(top: BorderSide(color: theme.dividerColor)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: Colors.black.withValues(
+              alpha: theme.brightness == Brightness.dark ? 0.18 : 0.04,
+            ),
             blurRadius: 8,
             offset: const Offset(0, -2),
           ),
@@ -288,26 +273,28 @@ class _InputBar extends StatelessWidget {
               onSubmitted: (_) => onSend(),
               enabled: !isLoading,
               decoration: InputDecoration(
-                hintText: 'Ask about your loan…',
+                hintText: 'Ask about your loan...',
                 hintStyle: const TextStyle(color: AppColors.textSecondary),
                 filled: true,
-                fillColor: AppColors.surfaceLight,
+                fillColor: theme.colorScheme.surface,
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: 16,
                   vertical: 10,
                 ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(24),
-                  borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                  borderSide: BorderSide(color: theme.dividerColor),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(24),
-                  borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                  borderSide: BorderSide(color: theme.dividerColor),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(24),
-                  borderSide:
-                      const BorderSide(color: AppColors.primary, width: 1.5),
+                  borderSide: const BorderSide(
+                    color: AppColors.primary,
+                    width: 1.5,
+                  ),
                 ),
               ),
             ),
@@ -333,7 +320,7 @@ class _SendButton extends StatelessWidget {
       width: 46,
       height: 46,
       decoration: BoxDecoration(
-        color: isLoading ? const Color(0xFFE2E8F0) : AppColors.primary,
+        color: isLoading ? Theme.of(context).dividerColor : AppColors.primary,
         shape: BoxShape.circle,
       ),
       child: Material(

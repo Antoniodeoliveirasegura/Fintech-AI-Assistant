@@ -219,10 +219,12 @@ class AiAssistantService {
   static Future<ChatMessage> _respond(String userMessage) async {
     final loan = Loan.fromJson(_loanData);
     final payments = _paymentsData.map((p) => Payment.fromJson(p)).toList();
-    final latePayments =
-        payments.where((p) => p.status == PaymentStatus.late).toList();
-    final upcomingPayments =
-        payments.where((p) => p.status == PaymentStatus.upcoming).toList();
+    final latePayments = payments
+        .where((p) => p.status == PaymentStatus.late)
+        .toList();
+    final upcomingPayments = payments
+        .where((p) => p.status == PaymentStatus.upcoming)
+        .toList();
     final recentPaid = payments
         .where((p) => p.status == PaymentStatus.paid)
         .take(3)
@@ -313,8 +315,10 @@ class AiAssistantService {
         return 'Great news — you have no late payments on record. Keep it up!';
       }
       final details = latePayments
-          .map((p) =>
-              '• ${_currency.format(p.amount)} due ${_date.format(p.dueDate)}')
+          .map(
+            (p) =>
+                '• ${_currency.format(p.amount)} due ${_date.format(p.dueDate)}',
+          )
           .join('\n');
       return 'You have ${latePayments.length} late payment(s):\n$details\n\n'
           'Late payments can affect your credit score. Contact support to discuss a payment plan.';
@@ -334,8 +338,10 @@ class AiAssistantService {
     if (_matches(msg, ['recent payment', 'last payment', 'history'])) {
       if (recentPaid.isEmpty) return 'No payments have been made yet.';
       final details = recentPaid
-          .map((p) =>
-              '• ${_currency.format(p.amount)} — paid ${_date.format(p.paidDate!)}')
+          .map(
+            (p) =>
+                '• ${_currency.format(p.amount)} — paid ${_date.format(p.paidDate!)}',
+          )
           .join('\n');
       return 'Your 3 most recent payments:\n$details';
     }
@@ -344,8 +350,10 @@ class AiAssistantService {
       if (upcomingPayments.isEmpty) return 'No upcoming payments found.';
       final details = upcomingPayments
           .take(3)
-          .map((p) =>
-              '• ${_currency.format(p.amount)} due ${_date.format(p.dueDate)}')
+          .map(
+            (p) =>
+                '• ${_currency.format(p.amount)} due ${_date.format(p.dueDate)}',
+          )
           .join('\n');
       return 'Upcoming payments:\n$details';
     }

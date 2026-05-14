@@ -43,22 +43,21 @@ class AuthState {
     String? error,
     bool clearError = false,
     bool clearUser = false,
-  }) =>
-      AuthState(
-        user: clearUser ? null : (user ?? this.user),
-        isLoading: isLoading ?? this.isLoading,
-        isRestoring: isRestoring ?? this.isRestoring,
-        error: clearError ? null : (error ?? this.error),
-      );
+  }) => AuthState(
+    user: clearUser ? null : (user ?? this.user),
+    isLoading: isLoading ?? this.isLoading,
+    isRestoring: isRestoring ?? this.isRestoring,
+    error: clearError ? null : (error ?? this.error),
+  );
 }
 
 class AuthNotifier extends StateNotifier<AuthState> {
   AuthNotifier({
     required MockApiService apiService,
     required SecureTokenStore tokenStore,
-  })  : _apiService = apiService,
-        _tokenStore = tokenStore,
-        super(const AuthState()) {
+  }) : _apiService = apiService,
+       _tokenStore = tokenStore,
+       super(const AuthState()) {
     restoreSession();
   }
 
