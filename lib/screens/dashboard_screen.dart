@@ -79,7 +79,7 @@ class DashboardScreen extends ConsumerWidget {
 
             // ── AI Assistant banner ─────────────────────────────────────
             _AssistantBanner(
-              onTap: () => context.go(AppRoutes.assistant),
+              onTap: () => context.goNamed(AppRoutes.assistantName),
             ),
             const SizedBox(height: AppSpacing.lg),
 
@@ -95,7 +95,7 @@ class DashboardScreen extends ConsumerWidget {
                 ),
                 const Spacer(),
                 TextButton(
-                  onPressed: () => context.go(AppRoutes.payments),
+                  onPressed: () => context.goNamed(AppRoutes.paymentsName),
                   child: const Text('See all'),
                 ),
               ],
@@ -126,7 +126,9 @@ class DashboardScreen extends ConsumerWidget {
                     children: recent
                         .map((p) => PaymentListItem(
                               payment: p,
-                              onTap: () => context.go(AppRoutes.payments),
+                              onTap: () => context.goNamed(
+                                AppRoutes.paymentsName,
+                              ),
                             ))
                         .toList(),
                   ),

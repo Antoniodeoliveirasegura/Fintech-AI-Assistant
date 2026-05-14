@@ -14,6 +14,11 @@ class AppRoutes {
   static const dashboard = '/dashboard';
   static const payments = '/payments';
   static const assistant = '/assistant';
+
+  static const loginName = 'login';
+  static const dashboardName = 'dashboard';
+  static const paymentsName = 'payments';
+  static const assistantName = 'assistant';
 }
 
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -41,6 +46,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     },
     routes: [
       GoRoute(
+        name: AppRoutes.loginName,
         path: AppRoutes.login,
         builder: (context, state) => const LoginScreen(),
       ),
@@ -49,14 +55,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state, child) => ShellScreen(child: child),
         routes: [
           GoRoute(
+            name: AppRoutes.dashboardName,
             path: AppRoutes.dashboard,
             builder: (context, state) => const DashboardScreen(),
           ),
           GoRoute(
+            name: AppRoutes.paymentsName,
             path: AppRoutes.payments,
             builder: (context, state) => const PaymentsScreen(),
           ),
           GoRoute(
+            name: AppRoutes.assistantName,
             path: AppRoutes.assistant,
             builder: (context, state) => const AssistantScreen(),
           ),
