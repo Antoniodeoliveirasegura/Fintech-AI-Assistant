@@ -3,6 +3,7 @@ import '../models/user.dart';
 import '../models/loan.dart';
 import '../models/payment.dart';
 import '../models/chat_message.dart';
+import '../models/account_notification.dart';
 
 // ============================================================================
 // MockApiService — drop-in stand-in for the future Django REST backend.
@@ -114,6 +115,30 @@ final _paymentsData = [
   },
 ];
 
+final _notificationData = [
+  {
+    'id': 'note_001',
+    'title': 'Payment received',
+    'message': 'Your latest payment has posted successfully.',
+    'created_at': '2026-05-12T09:15:00',
+    'type': 'payment',
+  },
+  {
+    'id': 'note_002',
+    'title': 'Upcoming payment',
+    'message': 'Your next payment is due soon.',
+    'created_at': '2026-05-14T08:30:00',
+    'type': 'reminder',
+  },
+  {
+    'id': 'note_003',
+    'title': 'Loan progress insight',
+    'message': 'You are more than halfway through the repayment schedule.',
+    'created_at': '2026-05-14T08:45:00',
+    'type': 'insight',
+  },
+];
+
 // ---------------------------------------------------------------------------
 // MockApiService
 // ---------------------------------------------------------------------------
@@ -156,6 +181,16 @@ class MockApiService {
   Future<ChatMessage> sendChatMessage(String message) async {
     final response = await AiAssistantService._respond(message);
     return _delay(response, ms: 600);
+  }
+
+  Stream<List<AccountNotification>> watchAccountNotifications() async* {
+    final notifications = _notificationData
+        .map((json) => AccountNotification.fromJson(json))
+        .toList();
+
+    yield notifications.take(2).toList();
+    await Future<void>.delayed(const Duration(seconds: 4));
+    yield notifications;
   }
 }
 

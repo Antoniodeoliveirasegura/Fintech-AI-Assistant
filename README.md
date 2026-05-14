@@ -1,6 +1,6 @@
 # Fintech AI Assistant
 
-> A Flutter mobile app that simulates a customer-facing fintech experience — loan dashboard, payment history with filters, and an AI assistant that answers questions about the user's account.
+> Mobile-first Flutter portfolio app that simulates a fintech loan dashboard, payment history, protected routing, and a local AI assistant.
 
 [![Flutter](https://img.shields.io/badge/Flutter-3-blue?logo=flutter)](https://flutter.dev)
 [![Dart](https://img.shields.io/badge/Dart-3-blue?logo=dart)](https://dart.dev)
@@ -8,17 +8,11 @@
 [![GoRouter](https://img.shields.io/badge/Routing-GoRouter-02569B)](https://pub.dev/packages/go_router)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
----
-
 ## Overview
 
-This is a portfolio project built to practice the kind of work a junior engineer at a fintech company might do day to day: building customer-facing mobile screens, consuming APIs, managing app state, wiring authentication, and integrating AI assistant flows.
+Fintech AI Assistant is a learning project designed to feel like a small, internship-ready mobile codebase. It practices the pieces common to production Flutter work: authentication state, protected navigation, async data loading, reusable widgets, service-layer boundaries, testing, and a mock AI workflow.
 
-The app uses **mock data only** — there is no backend. The architecture is deliberately structured so the mock service layer can be swapped for a real Django REST API and the keyword-matching assistant can be swapped for a real LLM agent with minimal changes to the rest of the app.
-
-> **Disclaimer:** This is a learning project. All user data, loan details, and AI responses are mocked locally. No real customer data, financial transactions, or external API calls are involved. Do not use this code for any real lending or financial product without proper review.
-
----
+All data is local demo data. There is no real backend, no real customer data, no real loan product, and no external AI API call.
 
 ## Screenshots
 
@@ -30,220 +24,213 @@ The app uses **mock data only** — there is no backend. The architecture is del
 |---|---|
 | ![Payments screen](docs/screenshots/payments.png) | ![Assistant screen](docs/screenshots/assistant.png) |
 
----
+Capture instructions live in [docs/screenshots/README.md](docs/screenshots/README.md).
 
 ## Tech Stack
 
 | Layer | Choice |
 |---|---|
-| Framework | **Flutter** (Material 3) |
-| Language | **Dart 3** |
-| State management | **flutter_riverpod** — `FutureProvider`, `StateNotifierProvider`, derived `Provider`s |
-| Navigation | **go_router** — declarative routes, `ShellRoute` for the bottom nav, `redirect` for the auth guard |
-| Formatting | **intl** — currency + date formatting |
-| HTTP (future) | **http** — wired through an `ApiClient` abstraction |
-
----
+| App framework | Flutter, Material 3 |
+| Language | Dart 3 |
+| State management | Riverpod |
+| Routing | GoRouter |
+| Secure persistence | flutter_secure_storage |
+| Mock services | Local async service layer |
+| Formatting | intl |
+| CI | GitHub Actions |
+| Tests | flutter_test, provider tests, widget tests |
 
 ## Features
 
-- **Mock authentication** with a global `AuthProvider`, route-level guard via GoRouter `redirect`, and a logout flow from the profile menu
-- **Dashboard** with a gradient loan-balance hero card, progress bar, next-payment card, AI assistant promo, and recent payments — supports pull-to-refresh
-- **Payments screen** with filter chips (All / Paid / Upcoming / Late) and a tap-to-detail bottom sheet
-- **AI assistant** chat UI with suggestion chips, animated typing indicator, auto-scroll, and 10+ supported question types
-- **Polished theme** with a centralized color, spacing, and text-style system
-- **Reusable widget library** for cards, status badges, list items, chat bubbles, loading, and error states
-- **Tests** — 20 passing tests across services, providers, and a smoke test
-
----
+- Mock login with secure token persistence.
+- App startup session restore using `flutter_secure_storage`.
+- Protected routes with GoRouter auth redirects.
+- Mobile-first dashboard with loan summary, progress, next payment, live activity, and recent payments.
+- Payments screen with status filters and a detail bottom sheet.
+- Local AI assistant that answers account and loan questions from mock data.
+- StreamProvider practice through live account activity updates.
+- Reusable fintech UI widgets for cards, badges, payments, chat bubbles, loading, and error states.
+- GitHub Actions CI for `flutter pub get`, `flutter analyze`, and `flutter test`.
 
 ## Architecture
 
-The app is split into four layers. Data flows top-down; nothing in a lower layer imports from a higher one.
+The app follows a simple layered structure:
 
-```
-┌─────────────────────────────────────────────────────────┐
-│  Screens + Widgets                       UI layer       │
-└─────────────────────────────────────────────────────────┘
-                          ↑
-┌─────────────────────────────────────────────────────────┐
-│  Providers (Riverpod)                    State layer    │
-└─────────────────────────────────────────────────────────┘
-                          ↑
-┌─────────────────────────────────────────────────────────┐
-│  Services (Mock / future Remote)         Service layer  │
-└─────────────────────────────────────────────────────────┘
-                          ↑
-┌─────────────────────────────────────────────────────────┐
-│  Models (fromJson / toJson)              Data layer     │
-└─────────────────────────────────────────────────────────┘
+```text
+Screens + widgets
+    watch
+Riverpod providers
+    call
+Services
+    parse
+Models
 ```
 
-A full walk-through of the data flow, auth redirect, and swap-in paths lives in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+### Data flow example
 
-### State management
+1. `DashboardScreen` calls `ref.watch(loanProvider)`.
+2. `loanProvider` calls `MockApiService().getLoan()`.
+3. `MockApiService` returns JSON-like seed data after a delay.
+4. `Loan.fromJson()` converts the response into a typed Dart model.
+5. The screen receives an `AsyncValue<Loan>` and renders loading, error, or data UI.
 
-Riverpod is used as the single source of truth for app state:
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full walkthrough.
 
-| Provider type | Used for |
+## State Management
+
+Riverpod is used as the source of truth for app state:
+
+| Provider | Purpose |
 |---|---|
-| `FutureProvider<T>` | Async data fetches with built-in loading/error/data states — `loanProvider`, `paymentsProvider` |
-| `StateProvider<T>` | Lightweight UI state — `paymentFilterProvider` |
-| `StateNotifierProvider<N, S>` | Mutable state with logic — `authProvider`, `chatProvider` |
-| `Provider<T>` | Derived/computed values — `filteredPaymentsProvider`, `appRouterProvider` |
+| `authProvider` | Login, logout, startup session restore, auth error/loading state |
+| `loanProvider` | Async active loan fetch |
+| `paymentsProvider` | Async payment history fetch |
+| `paymentFilterProvider` | Current payment filter chip |
+| `filteredPaymentsProvider` | Derived filtered payment list |
+| `accountNotificationsProvider` | StreamProvider for live account activity |
+| `chatProvider` | AI assistant messages and loading state |
 
-Widgets subscribe with `ref.watch(provider)` inside `build()` and call mutating methods with `ref.read(provider.notifier)` from callbacks.
+Provider tests use `ProviderContainer`; widget tests override platform storage with an in-memory token store.
 
-### Routing & auth
+## Routing
 
-GoRouter is configured with a `ShellRoute` that hosts the bottom-nav tabs (`/dashboard`, `/payments`, `/assistant`) and a top-level `/login` route. A `redirect` callback reads `authProvider` and:
+GoRouter owns navigation:
 
-- sends **unauthenticated users** to `/login`
-- sends **authenticated users away from** `/login`
+- `/login` is public.
+- `/dashboard`, `/payments`, and `/assistant` are protected by the auth redirect.
+- Authenticated users are redirected away from `/login`.
+- The authenticated routes are wrapped in a `ShellRoute` with bottom navigation.
+- Named routes (`goNamed`) are used for safer navigation.
 
-The login screen never calls `context.go()` — it just updates `authProvider`, and the router handles the consequence. This is the "reactive routing" pattern bridged into Riverpod via a `ValueNotifier` adapter.
+The login screen does not manually navigate. It updates `authProvider`, then the router reacts to the new auth state.
 
-### AI assistant
+## AI Assistant
 
-`AiAssistantService` lives in `lib/services/mock_api_service.dart`. Today it's a keyword-matching engine ordered specifically-to-generally:
+The assistant is intentionally local and mock-only. `AiAssistantService` uses keyword matching over mock loan and payment data to answer questions such as:
 
-- **Specific patterns first** — `"paid so far"` is checked before `"balance"` so `"How much have I paid so far?"` doesn't match the balance branch.
-- **Helpers** — `_explainStatus(loan)` and `_nextStepAdvice(loan, late)` build contextual replies.
-- **Swap-in ready** — the public surface is `Future<ChatMessage> sendChatMessage(String)`. Replacing the body with an OpenAI/Anthropic call is a one-method change; no UI changes needed.
+- What is my balance?
+- When is my next payment?
+- Do I have late payments?
+- How much have I paid so far?
+- What percentage of my loan is paid?
+- What should I do next?
 
-Supported questions include: balance, next payment, late payments, paid so far, progress percentage, loan summary, upcoming payments, interest rate, loan status explanation, and "what should I do next?" advice.
-
----
+The public surface stays small: `MockApiService.sendChatMessage(String)`. That makes it straightforward to replace the local logic with a real LLM or agent endpoint later.
 
 ## Folder Structure
 
-```
+```text
 lib/
-├── main.dart                   # ProviderScope + MaterialApp.router
-├── models/                     # Plain Dart models, fromJson/toJson
-│   ├── chat_message.dart
-│   ├── loan.dart
-│   ├── payment.dart
-│   └── user.dart
-├── providers/                  # Riverpod state
-│   ├── auth_provider.dart
-│   ├── chat_provider.dart
-│   ├── loan_provider.dart
-│   └── payments_provider.dart
-├── router/
-│   └── app_router.dart         # GoRouter + auth redirect + ShellRoute
-├── screens/                    # One file per route
-│   ├── assistant_screen.dart
-│   ├── dashboard_screen.dart
-│   ├── login_screen.dart
-│   ├── payments_screen.dart
-│   └── shell_screen.dart
-├── services/
-│   ├── api_client.dart         # HTTP abstraction (stub for future backend)
-│   └── mock_api_service.dart   # MockApiService + AiAssistantService
-├── utils/
-│   └── app_theme.dart          # AppColors, AppTheme, AppSpacing
-└── widgets/                    # Reusable, prop-driven (no Riverpod inside)
-    ├── app_error_widget.dart
-    ├── app_loading_widget.dart
-    ├── chat_bubble.dart
-    ├── fintech_card.dart
-    ├── payment_list_item.dart
-    └── status_badge.dart
+  main.dart
+  models/
+    account_notification.dart
+    chat_message.dart
+    loan.dart
+    payment.dart
+    user.dart
+  providers/
+    auth_provider.dart
+    chat_provider.dart
+    loan_provider.dart
+    notifications_provider.dart
+    payments_provider.dart
+  router/
+    app_router.dart
+  screens/
+    assistant_screen.dart
+    dashboard_screen.dart
+    login_screen.dart
+    payments_screen.dart
+    shell_screen.dart
+  services/
+    api_client.dart
+    mock_api_service.dart
+    secure_token_store.dart
+  utils/
+    app_theme.dart
+  widgets/
+    app_error_widget.dart
+    app_loading_widget.dart
+    chat_bubble.dart
+    fintech_card.dart
+    payment_list_item.dart
+    status_badge.dart
 
 docs/
-├── ARCHITECTURE.md             # Layered overview, data flow, swap-in guides
-└── LEARNING_NOTES.md           # Study guide for the codebase
+  ARCHITECTURE.md
+  LEARNING_NOTES.md
+  screenshots/
 
 test/
-├── providers/auth_provider_test.dart
-├── services/ai_assistant_service_test.dart
-├── services/mock_api_service_test.dart
-└── widget_test.dart
+  providers/
+  screens/
+  services/
+  widget_test.dart
 ```
-
----
 
 ## Getting Started
 
-### Prerequisites
-
-- [Flutter SDK](https://docs.flutter.dev/get-started/install) (Dart 3+)
-- Android Studio / Xcode / VS Code with the Flutter extension
-- An Android emulator, iOS simulator, or physical device
-
-### Run
-
 ```bash
-git clone <your-fork-url>
+git clone <your-repo-url>
 cd fintech-ai-assistant
 flutter pub get
 flutter run
 ```
 
-### Demo credentials
+Demo login:
 
-The login screen accepts **any valid email** and **any password 6+ characters long**. The mock service always returns the same fixed user, regardless of the email entered.
+- Email: any valid email address
+- Password: any value with at least 6 characters
 
-### Tests
+## Tests and CI
+
+Run checks locally:
 
 ```bash
-flutter test       # runs all 20 tests
-flutter analyze    # static analysis — must report no issues
+flutter pub get
+flutter analyze
+flutter test
 ```
 
----
+GitHub Actions runs the same checks on pushes and pull requests to `main` and `master`.
+
+If Windows local tests hit a Flutter shader compiler issue, run:
+
+```bash
+flutter test --no-test-assets
+```
+
+The CI workflow still runs the normal `flutter test` command on Ubuntu.
 
 ## Learning Goals
 
-This project exists to deliberately practice:
+This project is meant to help practice:
 
-- **Idiomatic Riverpod** — picking the right provider type, splitting state, deriving computed providers, knowing when to `watch` vs `read`
-- **Reactive routing** — wiring GoRouter to auth state without imperative navigation
-- **Layered architecture** — keeping screens thin, services replaceable, models pure
-- **Mock-first development** — building an entire app end-to-end before any backend exists
-- **Testing fundamentals** — `ProviderContainer` for provider tests, behavior-focused service tests
-- **Material 3 theming** — one source of truth for colors, spacing, and text styles
+- Riverpod provider types and provider testing.
+- GoRouter redirects and protected navigation.
+- Secure token persistence with a testable storage abstraction.
+- `FutureProvider` for API-style reads.
+- `StreamProvider` for live updates.
+- Mock-first service design that can later swap to a backend.
+- Widget tests for real app flows.
+- CI setup for Flutter repositories.
 
-A self-paced study guide for the codebase lives in [`docs/LEARNING_NOTES.md`](docs/LEARNING_NOTES.md).
-
----
+See [docs/LEARNING_NOTES.md](docs/LEARNING_NOTES.md) for a guided study path.
 
 ## Future Improvements
 
-### Backend integration
-- Implement `HttpApiClient.get()` / `.post()` with timeouts, retries, and centralized 401 handling
-- Build a `RemoteApiService` that mirrors the `MockApiService` surface
-- Introduce an `apiServiceProvider` toggled by a `--dart-define=USE_MOCK_API=false` build flag
+- Replace `MockApiService` with a Django REST-backed `RemoteApiService`.
+- Implement real token refresh and centralized 401 handling in `ApiClient`.
+- Replace local assistant logic with a real LLM or agent endpoint.
+- Add typed route generation if route complexity grows.
+- Add screenshot PNGs and a short demo GIF.
+- Add a custom app icon using `flutter_launcher_icons`.
+- Add dark-mode screenshots.
 
-### Real AI / LLM agent
-- Replace `AiAssistantService._respond` body with an HTTP call to a real model provider
-- Add a `PromptBuilder` that injects the user's loan + payments as JSON context
-- Support tool calls so the agent can fetch fresh data on demand
-- Stream responses token-by-token (the provider already exposes `isLoading`)
+## Disclaimer
 
-### Auth hardening
-- Persist tokens via `flutter_secure_storage`
-- Add a `restoreSession()` hook in `main()` so returning users skip the login screen
-- Add biometric login via `local_auth`
-
-### Other natural next steps
-- Widget tests for the dashboard's `AsyncValue` branches
-- Deep links via GoRouter URL paths
-- Sentry / Crashlytics integration
-- Real app icon and splash screen
-- Dark mode preview screenshots
-
----
-
-## Documentation
-
-- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — layered overview, data flow, mock → real swap-in guide
-- [`docs/LEARNING_NOTES.md`](docs/LEARNING_NOTES.md) — Riverpod / GoRouter / `AsyncValue` study notes
-- [`CONTRIBUTING.md`](CONTRIBUTING.md) — conventions, setup, good first contributions
-
----
+This repository is for learning and portfolio demonstration only. It does not provide financial advice, does not process real transactions, and does not connect to real banking or lending systems.
 
 ## License
 
-[MIT](LICENSE) — feel free to use this as a reference or starting point for your own work.
+[MIT](LICENSE)

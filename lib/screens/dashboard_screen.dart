@@ -5,8 +5,10 @@ import 'package:intl/intl.dart';
 import '../models/loan.dart';
 import '../models/payment.dart';
 import '../models/user.dart';
+import '../models/account_notification.dart';
 import '../providers/auth_provider.dart';
 import '../providers/loan_provider.dart';
+import '../providers/notifications_provider.dart';
 import '../providers/payments_provider.dart';
 import '../providers/chat_provider.dart';
 import '../router/app_router.dart';
@@ -25,6 +27,7 @@ class DashboardScreen extends ConsumerWidget {
     final user = ref.watch(authProvider).user;
     final loanAsync = ref.watch(loanProvider);
     final paymentsAsync = ref.watch(paymentsProvider);
+    final notificationsAsync = ref.watch(accountNotificationsProvider);
 
     // Router guarantees user is non-null when on this screen, but we still
     // fall back defensively if a logout race lands here mid-frame.
@@ -76,8 +79,11 @@ class DashboardScreen extends ConsumerWidget {
 
             // ── AI Assistant banner ─────────────────────────────────────
             _AssistantBanner(
-              onTap: () => context.go(AppRoutes.assistant),
+              onTap: () => context.goNamed(AppRoutes.assistantName),
             ),
+            const SizedBox(height: AppSpacing.lg),
+
+            _LiveActivitySection(notificationsAsync: notificationsAsync),
             const SizedBox(height: AppSpacing.lg),
 
             // ── Recent payments ─────────────────────────────────────────
@@ -89,7 +95,7 @@ class DashboardScreen extends ConsumerWidget {
                 ),
                 const Spacer(),
                 TextButton(
-                  onPressed: () => context.go(AppRoutes.payments),
+                  onPressed: () => context.goNamed(AppRoutes.paymentsName),
                   child: const Text('See all'),
                 ),
               ],
@@ -120,7 +126,9 @@ class DashboardScreen extends ConsumerWidget {
                     children: recent
                         .map((p) => PaymentListItem(
                               payment: p,
-                              onTap: () => context.go(AppRoutes.payments),
+                              onTap: () => context.goNamed(
+                                AppRoutes.paymentsName,
+                              ),
                             ))
                         .toList(),
                   ),
@@ -320,6 +328,91 @@ class _NextPaymentCard extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
+// Live activity section — StreamProvider demo
+// ---------------------------------------------------------------------------
+
+class _LiveActivitySection extends StatelessWidget {
+  final AsyncValue<List<AccountNotification>> notificationsAsync;
+
+  const _LiveActivitySection({required this.notificationsAsync});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text(
+              'Live Account Activity',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Container(
+              width: 8,
+              height: 8,
+              decoration: const BoxDecoration(
+                color: AppColors.success,
+                shape: BoxShape.circle,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        notificationsAsync.when(
+          data: (notifications) => FintechCard(
+            padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+            child: Column(
+              children: notifications
+                  .take(2)
+                  .map((notification) => _NotificationTile(
+                        notification: notification,
+                      ))
+                  .toList(),
+            ),
+          ),
+          loading: () => const FintechCard(
+            child: AppLoadingWidget(message: 'Checking live activity...'),
+          ),
+          error: (e, _) => AppErrorWidget(message: e.toString()),
+        ),
+      ],
+    );
+  }
+}
+
+class _NotificationTile extends StatelessWidget {
+  final AccountNotification notification;
+
+  const _NotificationTile({required this.notification});
+
+  @override
+  Widget build(BuildContext context) {
+    final icon = switch (notification.type) {
+      AccountNotificationType.payment => Icons.check_circle_rounded,
+      AccountNotificationType.reminder => Icons.schedule_rounded,
+      AccountNotificationType.insight => Icons.auto_graph_rounded,
+    };
+
+    return ListTile(
+      dense: true,
+      minLeadingWidth: 28,
+      leading: Icon(icon, color: AppColors.primary, size: 22),
+      title: Text(
+        notification.title,
+        style: const TextStyle(fontWeight: FontWeight.w600),
+        overflow: TextOverflow.ellipsis,
+      ),
+      subtitle: Text(
+        notification.message,
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
 // AI Assistant promotional banner
 // ---------------------------------------------------------------------------
 
@@ -494,11 +587,11 @@ class _ProfileMenu extends ConsumerWidget {
           ),
         ),
       ],
-      onSelected: (value) {
+      onSelected: (value) async {
         if (value == 'logout') {
           // Clear chat history before logout so the next session starts clean.
           ref.invalidate(chatProvider);
-          ref.read(authProvider.notifier).logout();
+          await ref.read(authProvider.notifier).logout();
         }
       },
     );

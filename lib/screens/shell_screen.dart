@@ -23,11 +23,11 @@ class ShellScreen extends StatelessWidget {
         onDestinationSelected: (index) {
           switch (index) {
             case 0:
-              context.go(AppRoutes.dashboard);
+              context.goNamed(AppRoutes.dashboardName);
             case 1:
-              context.go(AppRoutes.payments);
+              context.goNamed(AppRoutes.paymentsName);
             case 2:
-              context.go(AppRoutes.assistant);
+              context.goNamed(AppRoutes.assistantName);
           }
         },
         destinations: const [
