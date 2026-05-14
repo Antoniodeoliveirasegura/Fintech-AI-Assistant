@@ -26,6 +26,32 @@ All data is local demo data. There is no real backend, no real customer data, no
 
 Capture instructions live in [docs/screenshots/README.md](docs/screenshots/README.md).
 
+## Demo GIF
+
+Add a short walkthrough at `docs/demo/demo.gif` once recorded.
+
+```md
+![Fintech AI Assistant demo](docs/demo/demo.gif)
+```
+
+Suggested capture flow:
+
+1. Login.
+2. Show dashboard, live activity, and dark-mode toggle.
+3. Filter payments.
+4. Ask the AI assistant "What should I do next?"
+
+See [docs/demo/README.md](docs/demo/README.md) for capture guidance.
+
+## Feature Highlights
+
+- Secure mock auth token persistence with startup session restore.
+- Riverpod `FutureProvider`, `StreamProvider`, `StateNotifierProvider`, and derived providers.
+- GoRouter protected routes with named route navigation.
+- Mobile-first dashboard with live activity stream and polished loading/error states.
+- Local AI assistant designed so a real agent endpoint can replace the mock logic later.
+- CI pipeline with formatting, analysis, tests, and web build verification.
+
 ## Tech Stack
 
 | Layer | Choice |
@@ -35,6 +61,7 @@ Capture instructions live in [docs/screenshots/README.md](docs/screenshots/READM
 | State management | Riverpod |
 | Routing | GoRouter |
 | Secure persistence | flutter_secure_storage |
+| Environment config | flutter_dotenv |
 | Mock services | Local async service layer |
 | Formatting | intl |
 | CI | GitHub Actions |
@@ -51,6 +78,8 @@ Capture instructions live in [docs/screenshots/README.md](docs/screenshots/READM
 - StreamProvider practice through live account activity updates.
 - Reusable fintech UI widgets for cards, badges, payments, chat bubbles, loading, and error states.
 - GitHub Actions CI for `flutter pub get`, `flutter analyze`, and `flutter test`.
+- Persisted dark-mode preference with a dashboard toggle.
+- Splash-screen configuration through `flutter_native_splash`.
 
 ## Architecture
 
@@ -188,8 +217,10 @@ Run checks locally:
 
 ```bash
 flutter pub get
+dart format --output=none --set-exit-if-changed lib test
 flutter analyze
 flutter test
+flutter build web --release
 ```
 
 GitHub Actions runs the same checks on pushes and pull requests to `main` and `master`.
@@ -211,6 +242,7 @@ This project is meant to help practice:
 - Secure token persistence with a testable storage abstraction.
 - `FutureProvider` for API-style reads.
 - `StreamProvider` for live updates.
+- Theme persistence and app-level configuration.
 - Mock-first service design that can later swap to a backend.
 - Widget tests for real app flows.
 - CI setup for Flutter repositories.
@@ -225,6 +257,7 @@ See [docs/LEARNING_NOTES.md](docs/LEARNING_NOTES.md) for a guided study path.
 - Add typed route generation if route complexity grows.
 - Add screenshot PNGs and a short demo GIF.
 - Add a custom app icon using `flutter_launcher_icons`.
+- Generate native splash assets with `dart run flutter_native_splash:create`.
 - Add dark-mode screenshots.
 
 ## Disclaimer

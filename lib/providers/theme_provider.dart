@@ -18,17 +18,20 @@ class ThemeModeNotifier extends StateNotifier<ThemeMode> {
   }
 
   final ThemePreferenceStore _store;
+  int _version = 0;
 
   bool get isDarkMode => state == ThemeMode.dark;
 
   Future<void> _restore() async {
+    final restoreVersion = _version;
     final isDarkMode = await _store.readIsDarkMode();
-    if (mounted) {
+    if (mounted && restoreVersion == _version) {
       state = isDarkMode ? ThemeMode.dark : ThemeMode.light;
     }
   }
 
   Future<void> toggle() async {
+    _version++;
     final nextMode = state == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
     state = nextMode;
     await _store.writeIsDarkMode(nextMode == ThemeMode.dark);
