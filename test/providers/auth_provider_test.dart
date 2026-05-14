@@ -7,18 +7,29 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fintech_ai_assistant/providers/auth_provider.dart';
+import 'package:fintech_ai_assistant/services/secure_token_store.dart';
 
 void main() {
   group('authProvider', () {
     late ProviderContainer container;
+    late InMemorySecureTokenStore tokenStore;
 
     setUp(() {
-      container = ProviderContainer();
+      tokenStore = InMemorySecureTokenStore();
+      container = ProviderContainer(
+        overrides: [
+          secureTokenStoreProvider.overrideWithValue(tokenStore),
+        ],
+      );
     });
 
     tearDown(() {
       container.dispose();
     });
+
+    Future<void> letRestoreFinish() async {
+      await Future<void>.delayed(Duration.zero);
+    }
 
     test('initial state is unauthenticated', () {
       final state = container.read(authProvider);
@@ -26,6 +37,26 @@ void main() {
       expect(state.user, isNull);
       expect(state.error, isNull);
       expect(state.isLoading, isFalse);
+      expect(state.isRestoring, isTrue);
+    });
+
+    test('restoreSession keeps a stored-token user logged in', () async {
+      final restoredStore = InMemorySecureTokenStore(
+        initialToken: 'mock-session-token',
+      );
+      final restoredContainer = ProviderContainer(
+        overrides: [
+          secureTokenStoreProvider.overrideWithValue(restoredStore),
+        ],
+      );
+      addTearDown(restoredContainer.dispose);
+
+      await restoredContainer.read(authProvider.notifier).restoreSession();
+
+      final state = restoredContainer.read(authProvider);
+      expect(state.isAuthenticated, isTrue);
+      expect(state.user, isNotNull);
+      expect(state.isRestoring, isFalse);
     });
 
     test('login with valid credentials sets the user', () async {
@@ -39,6 +70,7 @@ void main() {
       expect(state.user!.email, contains('@'));
       expect(state.error, isNull);
       expect(state.isLoading, isFalse);
+      expect(await tokenStore.readToken(), 'mock-session-token');
     });
 
     test('login with empty credentials sets an error', () async {
@@ -55,12 +87,13 @@ void main() {
       await notifier.login('test@example.com', 'password123');
       expect(container.read(authProvider).isAuthenticated, isTrue);
 
-      notifier.logout();
+      await notifier.logout();
 
       final state = container.read(authProvider);
       expect(state.isAuthenticated, isFalse);
       expect(state.user, isNull);
       expect(state.error, isNull);
+      expect(await tokenStore.readToken(), isNull);
     });
 
     test('subsequent login after error clears the error', () async {
@@ -71,6 +104,15 @@ void main() {
       await notifier.login('a@b.com', 'password123');
       expect(container.read(authProvider).error, isNull);
       expect(container.read(authProvider).isAuthenticated, isTrue);
+    });
+
+    test('restoreSession without token finishes unauthenticated', () async {
+      container.read(authProvider);
+      await letRestoreFinish();
+
+      final state = container.read(authProvider);
+      expect(state.isAuthenticated, isFalse);
+      expect(state.isRestoring, isFalse);
     });
   });
 }

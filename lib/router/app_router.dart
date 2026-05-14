@@ -29,7 +29,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     debugLogDiagnostics: true,
     refreshListenable: authRefresh,
     redirect: (context, state) {
-      final isAuth = ref.read(authProvider).isAuthenticated;
+      final auth = ref.read(authProvider);
+      if (auth.isRestoring) return null;
+
+      final isAuth = auth.isAuthenticated;
       final isOnLogin = state.matchedLocation == AppRoutes.login;
 
       if (!isAuth) return isOnLogin ? null : AppRoutes.login;

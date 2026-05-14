@@ -494,11 +494,11 @@ class _ProfileMenu extends ConsumerWidget {
           ),
         ),
       ],
-      onSelected: (value) {
+      onSelected: (value) async {
         if (value == 'logout') {
           // Clear chat history before logout so the next session starts clean.
           ref.invalidate(chatProvider);
-          ref.read(authProvider.notifier).logout();
+          await ref.read(authProvider.notifier).logout();
         }
       },
     );
