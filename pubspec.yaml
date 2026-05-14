@@ -1,5 +1,5 @@
-name: test_app
-description: "A new Flutter project."
+name: fintech_ai_assistant
+description: "Fintech AI Assistant — loan dashboard with AI chat, built for internship prep."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -34,7 +34,9 @@ dependencies:
   cupertino_icons: ^1.0.8
   http: ^1.2.0
   shared_preferences: ^2.3.0
-  flutter_dotenv: ^5.2.1
+  flutter_riverpod: ^2.6.1
+  go_router: ^14.6.3
+  intl: ^0.19.0
 
 dev_dependencies:
   flutter_test:
@@ -57,9 +59,6 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
-
-  assets:
-    - .env
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
