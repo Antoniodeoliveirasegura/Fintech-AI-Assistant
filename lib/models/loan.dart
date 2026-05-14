@@ -49,37 +49,37 @@ class Loan {
   });
 
   factory Loan.fromJson(Map<String, dynamic> json) => Loan(
-        id: json['id'] as String,
-        userId: json['user_id'] as String,
-        principalAmount: (json['principal_amount'] as num).toDouble(),
-        remainingBalance: (json['remaining_balance'] as num).toDouble(),
-        interestRate: (json['interest_rate'] as num).toDouble(),
-        startDate: DateTime.parse(json['start_date'] as String),
-        endDate: DateTime.parse(json['end_date'] as String),
-        nextPaymentDate: DateTime.parse(json['next_payment_date'] as String),
-        monthlyPayment: (json['monthly_payment'] as num).toDouble(),
-        status: LoanStatus.values.firstWhere(
-          (e) => e.name == json['status'],
-          orElse: () => LoanStatus.pending,
-        ),
-        totalPayments: json['total_payments'] as int,
-        completedPayments: json['completed_payments'] as int,
-      );
+    id: json['id'] as String,
+    userId: json['user_id'] as String,
+    principalAmount: (json['principal_amount'] as num).toDouble(),
+    remainingBalance: (json['remaining_balance'] as num).toDouble(),
+    interestRate: (json['interest_rate'] as num).toDouble(),
+    startDate: DateTime.parse(json['start_date'] as String),
+    endDate: DateTime.parse(json['end_date'] as String),
+    nextPaymentDate: DateTime.parse(json['next_payment_date'] as String),
+    monthlyPayment: (json['monthly_payment'] as num).toDouble(),
+    status: LoanStatus.values.firstWhere(
+      (e) => e.name == json['status'],
+      orElse: () => LoanStatus.pending,
+    ),
+    totalPayments: json['total_payments'] as int,
+    completedPayments: json['completed_payments'] as int,
+  );
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'user_id': userId,
-        'principal_amount': principalAmount,
-        'remaining_balance': remainingBalance,
-        'interest_rate': interestRate,
-        'start_date': startDate.toIso8601String(),
-        'end_date': endDate.toIso8601String(),
-        'next_payment_date': nextPaymentDate.toIso8601String(),
-        'monthly_payment': monthlyPayment,
-        'status': status.name,
-        'total_payments': totalPayments,
-        'completed_payments': completedPayments,
-      };
+    'id': id,
+    'user_id': userId,
+    'principal_amount': principalAmount,
+    'remaining_balance': remainingBalance,
+    'interest_rate': interestRate,
+    'start_date': startDate.toIso8601String(),
+    'end_date': endDate.toIso8601String(),
+    'next_payment_date': nextPaymentDate.toIso8601String(),
+    'monthly_payment': monthlyPayment,
+    'status': status.name,
+    'total_payments': totalPayments,
+    'completed_payments': completedPayments,
+  };
 
   // What fraction of payments are done (0.0 – 1.0).
   double get progressFraction =>

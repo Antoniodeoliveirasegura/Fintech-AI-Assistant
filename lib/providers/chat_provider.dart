@@ -28,14 +28,14 @@ class ChatNotifier extends StateNotifier<ChatState> {
   ChatNotifier() : super(ChatState(messages: _welcome()));
 
   static List<ChatMessage> _welcome() => [
-        ChatMessage(
-          id: 'welcome',
-          content:
-              'Hi! I\'m your Fintech AI Assistant. Ask me anything about your loan, balance, or payments.',
-          role: MessageRole.assistant,
-          timestamp: DateTime.now(),
-        ),
-      ];
+    ChatMessage(
+      id: 'welcome',
+      content:
+          'Hi! I\'m your Fintech AI Assistant. Ask me anything about your loan, balance, or payments.',
+      role: MessageRole.assistant,
+      timestamp: DateTime.now(),
+    ),
+  ];
 
   Future<void> send(String content) async {
     if (content.trim().isEmpty || state.isLoading) return;
@@ -73,8 +73,9 @@ class ChatNotifier extends StateNotifier<ChatState> {
   }
 }
 
-final chatProvider =
-    StateNotifierProvider<ChatNotifier, ChatState>((ref) => ChatNotifier());
+final chatProvider = StateNotifierProvider<ChatNotifier, ChatState>(
+  (ref) => ChatNotifier(),
+);
 
 // Derived providers so widgets only rebuild on the slice they care about.
 final chatMessagesProvider = Provider<List<ChatMessage>>(

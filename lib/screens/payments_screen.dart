@@ -59,8 +59,7 @@ class PaymentsScreen extends ConsumerWidget {
                       ),
                       itemBuilder: (context, i) => PaymentListItem(
                         payment: payments[i],
-                        onTap: () =>
-                            _showDetail(context, payments[i]),
+                        onTap: () => _showDetail(context, payments[i]),
                       ),
                     ),
                   );
@@ -263,8 +262,11 @@ class _PaymentDetailSheet extends StatelessWidget {
               ),
               child: const Row(
                 children: [
-                  Icon(Icons.warning_amber_rounded,
-                      color: AppColors.error, size: 18),
+                  Icon(
+                    Icons.warning_amber_rounded,
+                    color: AppColors.error,
+                    size: 18,
+                  ),
                   SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: Text(
@@ -301,11 +303,11 @@ class _DetailRow extends StatelessWidget {
           child: Text(
             value,
             textAlign: TextAlign.end,
-            style: valueStyle ??
-                Theme.of(context)
-                    .textTheme
-                    .bodyLarge
-                    ?.copyWith(fontWeight: FontWeight.w600),
+            style:
+                valueStyle ??
+                Theme.of(
+                  context,
+                ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
           ),
         ),
       ],

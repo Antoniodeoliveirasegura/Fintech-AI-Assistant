@@ -17,9 +17,7 @@ void main() {
     setUp(() {
       tokenStore = InMemorySecureTokenStore();
       container = ProviderContainer(
-        overrides: [
-          secureTokenStoreProvider.overrideWithValue(tokenStore),
-        ],
+        overrides: [secureTokenStoreProvider.overrideWithValue(tokenStore)],
       );
     });
 
@@ -45,9 +43,7 @@ void main() {
         initialToken: 'mock-session-token',
       );
       final restoredContainer = ProviderContainer(
-        overrides: [
-          secureTokenStoreProvider.overrideWithValue(restoredStore),
-        ],
+        overrides: [secureTokenStoreProvider.overrideWithValue(restoredStore)],
       );
       addTearDown(restoredContainer.dispose);
 

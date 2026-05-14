@@ -19,18 +19,21 @@ class FintechCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     final container = Container(
       padding: padding ?? const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: gradient == null ? (backgroundColor ?? Colors.white) : null,
+        color: gradient == null ? (backgroundColor ?? theme.cardColor) : null,
         gradient: gradient,
         borderRadius: BorderRadius.circular(16),
         border: gradient == null
-            ? Border.all(color: const Color(0xFFE2E8F0))
+            ? Border.all(color: theme.dividerColor.withValues(alpha: 0.8))
             : null,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: Colors.black.withValues(alpha: isDark ? 0.18 : 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),

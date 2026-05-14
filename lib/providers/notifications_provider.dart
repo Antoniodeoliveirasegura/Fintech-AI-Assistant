@@ -4,7 +4,8 @@ import '../services/mock_api_service.dart';
 
 // StreamProvider is Riverpod's fit for live data: widgets still receive an
 // AsyncValue, but the value can update repeatedly over time.
-final accountNotificationsProvider =
-    StreamProvider<List<AccountNotification>>((ref) {
+final accountNotificationsProvider = StreamProvider<List<AccountNotification>>((
+  ref,
+) {
   return MockApiService().watchAccountNotifications();
 });

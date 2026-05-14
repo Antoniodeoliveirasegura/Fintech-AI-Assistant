@@ -30,10 +30,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
-    ref.read(authProvider.notifier).login(
-          _emailCtrl.text.trim(),
-          _passwordCtrl.text,
-        );
+    ref
+        .read(authProvider.notifier)
+        .login(_emailCtrl.text.trim(), _passwordCtrl.text);
   }
 
   @override
@@ -41,7 +40,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final auth = ref.watch(authProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.surfaceLight,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -117,8 +115,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 ? Icons.visibility_outlined
                                 : Icons.visibility_off_outlined,
                           ),
-                          onPressed: () =>
-                              setState(() => _obscure = !_obscure),
+                          onPressed: () => setState(() => _obscure = !_obscure),
                         ),
                       ),
                       validator: (v) {
@@ -154,10 +151,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                     color: Colors.white,
                                   ),
                                 )
-                              : const Text(
-                                  'Sign in',
-                                  key: ValueKey('label'),
-                                ),
+                              : const Text('Sign in', key: ValueKey('label')),
                         ),
                       ),
                     ),
@@ -165,12 +159,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     const SizedBox(height: AppSpacing.xl),
                     Center(
                       child: Text(
-                        'Demo: any email · password 6+ chars',
-                        style:
-                            Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                  fontSize: 12,
-                                  color: AppColors.textSecondary,
-                                ),
+                        'Demo: any email - password 6+ chars',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          fontSize: 12,
+                          color: AppColors.textSecondary,
+                        ),
                       ),
                     ),
                   ],
@@ -199,8 +192,11 @@ class _ErrorBanner extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(Icons.error_outline_rounded,
-              color: AppColors.error, size: 18),
+          const Icon(
+            Icons.error_outline_rounded,
+            color: AppColors.error,
+            size: 18,
+          ),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Text(

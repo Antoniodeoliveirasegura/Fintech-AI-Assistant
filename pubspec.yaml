@@ -38,6 +38,7 @@ dependencies:
   go_router: ^14.6.3
   intl: ^0.19.0
   flutter_secure_storage: ^9.2.4
+  flutter_dotenv: ^5.2.1
 
 dev_dependencies:
   flutter_test:
@@ -54,6 +55,7 @@ dev_dependencies:
   # Run `dart run flutter_launcher_icons` after replacing the placeholder
   # at assets/icon/app_icon.png with a real 1024x1024 image.
   flutter_launcher_icons: ^0.14.1
+  flutter_native_splash: ^2.4.4
 
 # Configuration for flutter_launcher_icons.
 # Source asset: assets/icon/app_icon.png (1024x1024, opaque PNG)
@@ -77,6 +79,14 @@ flutter_launcher_icons:
   macos:
     generate: true
     image_path: "assets/icon/app_icon.png"
+
+flutter_native_splash:
+  color: "#F8FAFC"
+  color_dark: "#0F172A"
+  android: true
+  ios: true
+  web: true
+  fullscreen: false
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

@@ -11,6 +11,7 @@ import '../providers/loan_provider.dart';
 import '../providers/notifications_provider.dart';
 import '../providers/payments_provider.dart';
 import '../providers/chat_provider.dart';
+import '../providers/theme_provider.dart';
 import '../router/app_router.dart';
 import '../utils/app_theme.dart';
 import '../widgets/fintech_card.dart';
@@ -28,6 +29,7 @@ class DashboardScreen extends ConsumerWidget {
     final loanAsync = ref.watch(loanProvider);
     final paymentsAsync = ref.watch(paymentsProvider);
     final notificationsAsync = ref.watch(accountNotificationsProvider);
+    final isDarkMode = ref.watch(themeModeProvider) == ThemeMode.dark;
 
     // Router guarantees user is non-null when on this screen, but we still
     // fall back defensively if a logout race lands here mid-frame.
@@ -38,6 +40,13 @@ class DashboardScreen extends ConsumerWidget {
         title: Text(greeting),
         actions: [
           _ProfileMenu(user: user),
+          IconButton(
+            tooltip: isDarkMode ? 'Use light mode' : 'Use dark mode',
+            icon: Icon(
+              isDarkMode ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
+            ),
+            onPressed: () => ref.read(themeModeProvider.notifier).toggle(),
+          ),
           const SizedBox(width: AppSpacing.xs),
         ],
       ),
@@ -60,9 +69,8 @@ class DashboardScreen extends ConsumerWidget {
             // ── Loan balance hero card ──────────────────────────────────
             loanAsync.when(
               data: (loan) => _LoanHeroCard(loan: loan),
-              loading: () => const AppLoadingWidget(
-                message: 'Loading your account...',
-              ),
+              loading: () =>
+                  const AppLoadingWidget(message: 'Loading your account...'),
               error: (e, _) => AppErrorWidget(
                 message: e.toString(),
                 onRetry: () => ref.invalidate(loanProvider),
@@ -124,12 +132,13 @@ class DashboardScreen extends ConsumerWidget {
                   padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
                   child: Column(
                     children: recent
-                        .map((p) => PaymentListItem(
-                              payment: p,
-                              onTap: () => context.goNamed(
-                                AppRoutes.paymentsName,
-                              ),
-                            ))
+                        .map(
+                          (p) => PaymentListItem(
+                            payment: p,
+                            onTap: () =>
+                                context.goNamed(AppRoutes.paymentsName),
+                          ),
+                        )
                         .toList(),
                   ),
                 );
@@ -233,8 +242,7 @@ class _LoanHeroCard extends StatelessWidget {
               builder: (context, value, child) => LinearProgressIndicator(
                 value: value,
                 backgroundColor: Colors.white.withValues(alpha: 0.2),
-                valueColor:
-                    const AlwaysStoppedAnimation<Color>(Colors.white),
+                valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
                 minHeight: 7,
               ),
             ),
@@ -365,9 +373,10 @@ class _LiveActivitySection extends StatelessWidget {
             child: Column(
               children: notifications
                   .take(2)
-                  .map((notification) => _NotificationTile(
-                        notification: notification,
-                      ))
+                  .map(
+                    (notification) =>
+                        _NotificationTile(notification: notification),
+                  )
                   .toList(),
             ),
           ),
@@ -457,9 +466,9 @@ class _AssistantBanner extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   'Get instant answers about your loan',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontSize: 13,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(fontSize: 13),
                 ),
               ],
             ),
@@ -501,9 +510,7 @@ class _PayNowChip extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(
-              color: AppColors.primary.withValues(alpha: 0.2),
-            ),
+            border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
           ),
           child: const Text(
             'Pay now',
@@ -579,8 +586,7 @@ class _ProfileMenu extends ConsumerWidget {
           value: 'logout',
           child: Row(
             children: [
-              Icon(Icons.logout_rounded,
-                  size: 18, color: AppColors.error),
+              Icon(Icons.logout_rounded, size: 18, color: AppColors.error),
               SizedBox(width: AppSpacing.sm),
               Text('Logout', style: TextStyle(color: AppColors.error)),
             ],
