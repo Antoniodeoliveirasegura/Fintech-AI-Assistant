@@ -16,8 +16,6 @@ All data is local demo data. There is no real backend, no real customer data, no
 
 ## Screenshots
 
-Place captured screenshots in `docs/screenshots/` using these exact filenames.
-
 | Login | Dashboard |
 |---|---|
 | ![Login screen](docs/screenshots/login.png) | ![Dashboard screen](docs/screenshots/dashboard.png) |
