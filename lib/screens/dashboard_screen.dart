@@ -78,6 +78,12 @@ class DashboardScreen extends ConsumerWidget {
             ),
             const SizedBox(height: AppSpacing.md),
 
+            loanAsync.maybeWhen(
+              data: (loan) => _LoanAnalyticsRow(loan: loan),
+              orElse: () => const SizedBox.shrink(),
+            ),
+            const SizedBox(height: AppSpacing.md),
+
             // ── Next payment ────────────────────────────────────────────
             loanAsync.maybeWhen(
               data: (loan) => _NextPaymentCard(loan: loan),
@@ -267,6 +273,108 @@ class _LoanHeroCard extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Loan analytics cards
+// ---------------------------------------------------------------------------
+
+class _LoanAnalyticsRow extends StatelessWidget {
+  final Loan loan;
+
+  const _LoanAnalyticsRow({required this.loan});
+
+  static final _currency = NumberFormat.currency(symbol: '\$');
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isTight = constraints.maxWidth < 380;
+        final children = [
+          _AnalyticsCard(
+            label: 'Paid so far',
+            value: _currency.format(loan.amountPaid),
+            icon: Icons.trending_up_rounded,
+            accent: AppColors.success,
+          ),
+          _AnalyticsCard(
+            label: 'Remaining',
+            value: '${loan.totalPayments - loan.completedPayments} months',
+            icon: Icons.timeline_rounded,
+            accent: AppColors.info,
+          ),
+        ];
+
+        if (isTight) {
+          return Column(
+            children: [
+              children[0],
+              const SizedBox(height: AppSpacing.sm),
+              children[1],
+            ],
+          );
+        }
+
+        return Row(
+          children: [
+            Expanded(child: children[0]),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(child: children[1]),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _AnalyticsCard extends StatelessWidget {
+  final String label;
+  final String value;
+  final IconData icon;
+  final Color accent;
+
+  const _AnalyticsCard({
+    required this.label,
+    required this.value,
+    required this.icon,
+    required this.accent,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return FintechCard(
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: accent.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: accent, size: 20),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label, style: Theme.of(context).textTheme.labelSmall),
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  style: Theme.of(context).textTheme.titleMedium,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
           ),
         ],
       ),
