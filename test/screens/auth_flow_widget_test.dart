@@ -1,5 +1,6 @@
 import 'package:fintech_ai_assistant/main.dart';
 import 'package:fintech_ai_assistant/providers/auth_provider.dart';
+import 'package:fintech_ai_assistant/providers/notifications_provider.dart';
 import 'package:fintech_ai_assistant/services/secure_token_store.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -15,6 +16,9 @@ void main() {
         overrides: [
           secureTokenStoreProvider.overrideWithValue(
             InMemorySecureTokenStore(initialToken: initialToken),
+          ),
+          accountNotificationsProvider.overrideWith(
+            (ref) => Stream.value(const []),
           ),
         ],
         child: const FintechApp(),
