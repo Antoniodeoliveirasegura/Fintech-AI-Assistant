@@ -1,25 +1,31 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'home_screen.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'router/app_router.dart';
+import 'utils/app_theme.dart';
 
-void main() async {
-  await dotenv.load(fileName: '.env');
-  runApp(const MiamiNotesApp());
+void main() {
+  runApp(
+    // ProviderScope is the Riverpod root — all providers live inside it.
+    const ProviderScope(
+      child: FintechApp(),
+    ),
+  );
 }
 
-class MiamiNotesApp extends StatelessWidget {
-  const MiamiNotesApp({super.key});
+class FintechApp extends ConsumerWidget {
+  const FintechApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Miami Notes',
+  Widget build(BuildContext context, WidgetRef ref) {
+    final router = ref.watch(appRouterProvider);
+
+    return MaterialApp.router(
+      title: 'Fintech AI Assistant',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF0077B6)),
-        useMaterial3: true,
-      ),
-      home: const HomeScreen(),
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: ThemeMode.light,
+      routerConfig: router,
     );
   }
 }
