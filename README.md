@@ -22,8 +22,6 @@ The app uses **mock data only** — there is no backend. The architecture is del
 
 ## Screenshots
 
-> _Drop the captured PNGs into [`docs/screenshots/`](docs/screenshots/) using the exact filenames below. See [`docs/screenshots/README.md`](docs/screenshots/README.md) for capture commands._
-
 | Login | Dashboard |
 |---|---|
 | ![Login screen](docs/screenshots/login.png) | ![Dashboard screen](docs/screenshots/dashboard.png) |
